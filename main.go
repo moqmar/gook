@@ -22,7 +22,7 @@ func main() {
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("prefix", "/")
-	viper.SetDefault("ignore", "/proc/\n/sys/\n/dev/")
+	viper.SetDefault("ignore", "/proc/\n/sys/\n/dev/\n.git/\nnode_modules/")
 
 	gi = gitignore.NewGitIgnoreFromReader("/", strings.NewReader(viper.GetString("ignore")))
 	prefix = viper.GetString("prefix")
