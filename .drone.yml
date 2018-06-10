@@ -11,7 +11,7 @@ pipeline:
     bucket: get
     secrets: [ plugin_access_key, plugin_secret_key ]
     source: gook
-    target: /
+    target: gook
     path_style: true
     endpoint: https://minio.mo-mar.de
     when:
