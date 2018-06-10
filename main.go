@@ -29,7 +29,11 @@ func main() {
 
 	r := gin.Default()
 	r.Use(handler)
-	r.Run(":8080")
+	if port := os.Getenv("PORT"); port != "" {
+		r.Run(":" + port)
+	} else {
+		r.Run(":8080")
+	}
 }
 
 var gi gitignore.IgnoreMatcher
@@ -89,11 +93,11 @@ func executor(path string, key string, args []string, input io.Reader) (string, 
 	reader := bufio.NewReader(webhookFile)
 
 	// Validate first line
-	line, prefix, err := reader.ReadLine()
+	line, isPrefix, err := reader.ReadLine()
 	if err != nil {
 		return "", 404, err
 	}
-	if prefix {
+	if isPrefix {
 		return "", 500, errors.New("couldn't fully buffer first line")
 	}
 	if !strings.HasPrefix(string(line), "#!") {
@@ -101,19 +105,19 @@ func executor(path string, key string, args []string, input io.Reader) (string, 
 	}
 
 	// Validate second line
-	line, prefix, err = reader.ReadLine()
+	line, isPrefix, err = reader.ReadLine()
 	if err != nil {
 		return "", 404, err
 	}
-	if prefix {
+	if isPrefix {
 		return "", 500, errors.New("couldn't fully buffer second line")
 	}
+
+	// Validate key
 	if !strings.HasPrefix(string(line), "#@GOOK:") {
 		return "", 500, errors.New("no key specified in .webhook")
 	}
-
-	fkey := strings.TrimPrefix(string(line), "#@GOOK:")
-	if fkey != key {
+	if fileKey := strings.TrimPrefix(string(line), "#@GOOK:"); fileKey != key {
 		return "", 403, errors.New("invalid key")
 	}
 
@@ -121,8 +125,8 @@ func executor(path string, key string, args []string, input io.Reader) (string, 
 
 	cmd := exec.Command(webhookPath)
 	cmd.Env = append(os.Environ(), args...)
-
 	cmd.Stdin = input
+	cmd.Dir = filepath.Join(prefix, path)
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {
