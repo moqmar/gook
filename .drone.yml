@@ -11,9 +11,7 @@ pipeline:
     host: mo-mar.de
     port: 2244
     secrets: [ ssh_username, ssh_key ]
-    target:
-    - /static/static/bin/gook
-    source:
-    - gook
+    target: /static/static/static.mo-mar.de/bin/gook
+    source: gook
     when:
       branch: master
