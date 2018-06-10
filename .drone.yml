@@ -13,4 +13,4 @@ pipeline:
       branch: master
     commands:
     - apk add --no-cache curl
-    - curl -H "Content-Type:application/octet-stream" --data "@gook" "https://gook.mo-mar.de/static/$webhook_key?file=$file_key"
+    - curl -H "Content-Type:application/octet-stream" --data "@gook" -qo- "https://gook.mo-mar.de/static/$WEBHOOK_KEY?file=$FILE_KEY" | tee /dev/stderr | grep '^file written:' >/dev/null
