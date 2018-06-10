@@ -9,7 +9,7 @@ pipeline:
   publish:
     image: plugins/s3
     bucket: get
-    secrets: [ access_key, secret_key ]
+    secrets: [ plugin_access_key, plugin_secret_key ]
     source: gook
     target: /
     path_style: true
