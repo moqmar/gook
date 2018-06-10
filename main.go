@@ -16,13 +16,23 @@ import (
 )
 
 func main() {
-	viper.SetConfigName("gook.yaml")
+	viper.SetConfigName("gook")
 	viper.AddConfigPath("/etc/")
 	viper.AddConfigPath("$HOME/.config")
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("prefix", "/")
 	viper.SetDefault("ignore", "/proc/\n/sys/\n/dev/\n.git/\nnode_modules/")
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		if strings.HasPrefix(err.Error(), "Config File \"gook\" Not Found in ") {
+			fmt.Printf("No config file found, using default.\n")
+		} else {
+			fmt.Printf("Couldn't parse config: %s\n", err)
+			os.Exit(1)
+		}
+	}
 
 	gi = gitignore.NewGitIgnoreFromReader("/", strings.NewReader(viper.GetString("ignore")))
 	prefix = viper.GetString("prefix")
