@@ -1,0 +1,21 @@
+[Unit]
+Description=Gook Webhook Service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/gook
+Restart=on-failure
+Environment=GIN_MODE=release
+
+# Run as a custom user
+#User=someone
+#Group=someone
+
+# Listen on a custom port
+#Environment=PORT=8080
+
+# Listen on a custom host (in this example, on any host, which is not recommended)
+#Environmant=HOST=[::]
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,17 @@
+workspace:
+  base: /go
+  path: src/github.com/moqmar/gook
+pipeline:
+  build:
+    image: golang
+    commands:
+    - curl https://glide.sh/get | sh
+    - glide install
+    - CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static" -s' -o gook -v .
+  publish:
+    image: busybox
+    secrets: [ webhook_key, file_key ]
+    when:
+      branch: master
+    commands:
+      - curl -H "Content-Type:application/octet-stream" --data "@gook" "https://gook.mo-mar.de/static/$webhook_key?file=$file_key"
