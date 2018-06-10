@@ -29,11 +29,18 @@ func main() {
 
 	r := gin.Default()
 	r.Use(handler)
-	if port := os.Getenv("PORT"); port != "" {
-		r.Run(":" + port)
-	} else {
-		r.Run(":8080")
+
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "127.0.0.1"
 	}
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
+	r.Run(host + ":" + port)
 }
 
 var gi gitignore.IgnoreMatcher
