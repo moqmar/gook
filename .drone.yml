@@ -7,11 +7,12 @@ pipeline:
     commands:
     - CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static" -s' -o gook -v .
   publish:
-    image: appleboy/drone-scp
-    host: mo-mar.de
-    port: 2244
-    secrets: [ ssh_username, ssh_key ]
-    target: /static/static/static.mo-mar.de/bin/gook
+    image: plugins/s3
+    bucket: get
+    secrets: [ access_key, secret_key ]
     source: gook
+    target: /
+    path_style: true
+    endpoint: https://minio.mo-mar.de
     when:
       branch: master
