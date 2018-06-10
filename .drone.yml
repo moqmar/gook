@@ -7,9 +7,10 @@ pipeline:
     commands:
     - CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static" -s' -o gook -v .
   publish:
-    image: busybox
+    image: alpine
     secrets: [ webhook_key, file_key ]
     when:
       branch: master
     commands:
-      - curl -H "Content-Type:application/octet-stream" --data "@gook" "https://gook.mo-mar.de/static/$webhook_key?file=$file_key"
+    - apk add --no-cache curl
+    - curl -H "Content-Type:application/octet-stream" --data "@gook" "https://gook.mo-mar.de/static/$webhook_key?file=$file_key"
