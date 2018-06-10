@@ -50,7 +50,7 @@ ignore: |
 
 # HTTP Status Codes
  Code  |  Meaning
-====== | =========
+------ | ---------
  `200` | Script exited with exit code `0`.
  `418` | Script exited with a non-zero exit code. More information is available in the `Gook-Error` header.
  `403` | The given key is invalid.
