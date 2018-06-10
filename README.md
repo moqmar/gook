@@ -2,7 +2,9 @@
 
 A very simple webhook service for linux servers, written in Go.  
 If you create an executable script at `/var/www/.webhook`, you can run it by requesting http://localhost:8080/var/www/[key].  
-The key must be specified in the second line of the file with `#@GOOK:[key]` - you can generate a secure one using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
+The key must be specified in the second line of the file with `#@GOOK:[key]`.
+
+You can **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
 
 Example `.webhook` file:
 ```
