@@ -58,14 +58,14 @@ func handler(c *gin.Context) {
 	output, code, err := executor(strings.Join(path[1:len(path)-1], "/"), path[len(path)-1], args, c.Request.Body)
 	if code == 404 {
 		fmt.Printf("NO CANDIDATE: [%s] %s\n", uri, err)
-		c.String(code, "couldn't find .webhook candidate")
+		c.String(code, "couldn't find .webhook candidate\n")
 	} else if output == "" && err != nil {
-		c.String(code, "%s", err)
+		c.String(code, "%s\n", err)
 	} else {
 		if err != nil {
 			c.Header("Gook-Error", err.Error())
 		}
-		c.String(code, "%s", output)
+		c.String(code, "%s\n", output)
 	}
 
 }
