@@ -1,16 +1,17 @@
 package main
 
 import (
-	"os/exec"
 	"bufio"
-	"io/ioutil"
 	"errors"
-	"os"
-	"path/filepath"
 	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/moqmar/go-gitignore"
 	"github.com/spf13/viper"
 )
 
@@ -21,69 +22,111 @@ func main() {
 	viper.AddConfigPath(".")
 
 	viper.SetDefault("prefix", "/")
-	viper.SetDefault("ignore", "/proc/\n/sys/ \n/dev/")
+	viper.SetDefault("ignore", "/proc/\n/sys/\n/dev/")
+
+	gi = gitignore.NewGitIgnoreFromReader("/", strings.NewReader(viper.GetString("ignore")))
+	prefix = viper.GetString("prefix")
 
 	r := gin.Default()
 	r.Use(handler)
 	r.Run(":8080")
 }
 
+var gi gitignore.IgnoreMatcher
+var prefix string
+
 func handler(c *gin.Context) {
-	uri := c.Request.RequestURI
-	s := strings.Split(uri, "/")
-	executor(strings.Join(s[1:len(s)-1], "/"), s[len(s)-1])
+	c.Header("Content-Type", "text/plain; charset=utf-8")
+	if c.Request.Method != "GET" && c.Request.Method != "POST" {
+		c.String(405, "method not allowed")
+		return
+	}
+
+	uri := c.Request.URL.Path
+	path := strings.Split(uri, "/")
+
+	query := c.Request.URL.Query()
+	args := []string{}
+	for name, value := range query {
+		args = append(args, "gook_"+strings.SplitN(name, "=", 1)[0]+"="+value[0])
+	}
+
+	output, code, err := executor(strings.Join(path[1:len(path)-1], "/"), path[len(path)-1], args, c.Request.Body)
+	if code == 404 {
+		fmt.Printf("NO CANDIDATE: [%s] %s\n", uri, err)
+		c.String(code, "couldn't find .webhook candidate")
+	} else if output == "" && err != nil {
+		c.String(code, "%s", err)
+	} else {
+		if err != nil {
+			c.Header("Gook-Error", err.Error())
+		}
+		c.String(code, "%s", output)
+	}
+
 }
 
-func executor(path string, key string, args []string) (string, error) {
-	webhookPath := filepath.Join(viper.GetString("prefix"), path, ".webhook")
-	f, err :=os.Stat(webhookPath)
+func executor(path string, key string, args []string, input io.Reader) (string, int, error) {
+	if gi.Match("/"+path, true) {
+		return "", 404, errors.New("this path is ignored")
+	}
+
+	webhookPath := filepath.Join(prefix, path, ".webhook")
+	f, err := os.Stat(webhookPath)
 	if err != nil {
-		return "", err
+		return "", 404, err
 	}
 	if f.IsDir() {
-		return "", errors.New(".webhook is a directory")
-	} 
-	
+		return "", 404, errors.New(".webhook is a directory")
+	}
+
 	webhookFile, err := os.Open(webhookPath)
 	defer webhookFile.Close()
 	if err != nil {
-		return "", err
+		return "", 404, err
 	}
-	
+
 	reader := bufio.NewReader(webhookFile)
-	
+
 	// Validate first line
 	line, prefix, err := reader.ReadLine()
 	if err != nil {
-		return "", err
+		return "", 404, err
 	}
 	if prefix {
-		return "", errors.New("couldn't fully buffer first line")
+		return "", 500, errors.New("couldn't fully buffer first line")
 	}
 	if !strings.HasPrefix(string(line), "#!") {
-		return "", errors.New("not a script")
+		return "", 500, errors.New("not a script")
 	}
-	
+
 	// Validate second line
 	line, prefix, err = reader.ReadLine()
 	if err != nil {
-		return "", err
+		return "", 404, err
 	}
 	if prefix {
-		return "", errors.New("couldn't fully buffer second line")
+		return "", 500, errors.New("couldn't fully buffer second line")
 	}
 	if !strings.HasPrefix(string(line), "#@GOOK:") {
-		return "", errors.New("not a GOOK-file")
+		return "", 500, errors.New("no key specified in .webhook")
 	}
-	
+
 	fkey := strings.TrimPrefix(string(line), "#@GOOK:")
 	if fkey != key {
-		return "", errors.New("GOOK-key doesn't match")
+		return "", 403, errors.New("invalid key")
 	}
 
 	webhookFile.Close()
-	
+
 	cmd := exec.Command(webhookPath)
 	cmd.Env = append(os.Environ(), args...)
-}
 
+	cmd.Stdin = input
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(out), 418, err
+	}
+	return string(out), 200, nil
+}
