@@ -5,8 +5,6 @@ pipeline:
   build:
     image: golang
     commands:
-    - curl https://glide.sh/get | sh
-    - glide install
     - CGO_ENABLED=0 GOOS=linux go build -a -ldflags '-extldflags "-static" -s' -o gook -v .
   publish:
     image: busybox
