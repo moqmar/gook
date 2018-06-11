@@ -30,7 +30,7 @@ fi
 - Working directory of a script is the folder containing the .webhook file
 - Port and host can be set using the `PORT` and `HOST` environment variables
 
-## ⚠️ SECURITY CONSIDERATIONS ⚠
+## ⚠️ SECURITY CONSIDERATIONS ⚠️
 - The software can be considered production-ready, but we don't make any guarantees that it will work or not break anything.
 - You can **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
 - It is recommended that the webhook script is only readable by the user the Gook server is running under.
