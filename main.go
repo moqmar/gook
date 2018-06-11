@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -55,6 +56,7 @@ func main() {
 
 var gi gitignore.IgnoreMatcher
 var prefix string
+var gookline = regexp.MustCompile(`^#@[gG][oO][oO][kK]((?:\+[^\+:]+)*):(.*)$`)
 
 func handler(c *gin.Context) {
 	c.Header("Content-Type", "text/plain; charset=utf-8")
@@ -79,12 +81,19 @@ func handler(c *gin.Context) {
 	} else if output == "" && err != nil {
 		c.String(code, "%s\n", err)
 	} else {
-		if err != nil {
+		if err != nil && strings.HasPrefix(err.Error(), "exit status ") {
+			c.Header("Gook-Status", strings.TrimPrefix(err.Error(), "exit status "))
+			code = 424
+		} else {
 			c.Header("Gook-Error", err.Error())
 		}
 		c.String(code, "%s\n", output)
 	}
 
+}
+
+type flagsType struct {
+	stdin bool
 }
 
 func executor(path string, key string, args []string, input io.Reader) (string, int, error) {
@@ -130,20 +139,37 @@ func executor(path string, key string, args []string, input io.Reader) (string, 
 		return "", 500, errors.New("couldn't fully buffer second line")
 	}
 
+	flags := flagsType{}
+
 	// Validate key
-	if !strings.HasPrefix(string(line), "#@GOOK:") {
-		return "", 500, errors.New("no key specified in .webhook")
-	}
-	if fileKey := strings.TrimPrefix(string(line), "#@GOOK:"); fileKey != key {
-		return "", 403, errors.New("invalid key")
+	if m := gookline.FindStringSubmatch(string(line)); m != nil {
+		flagsString := strings.Split(m[1], "+")
+		for _, flag := range flagsString {
+			switch strings.ToLower(flag) {
+			// Parse flags
+			case "stdin":
+				flags.stdin = true
+			case "":
+			default:
+				return "", 500, errors.New("invalid flag in .webhook: " + flag)
+			}
+		}
+		if m[2] != key {
+			return "", 403, errors.New("invalid key")
+		}
+	} else {
+		return "", 404, errors.New(".webhook is not a valid webhook script (check syntax of second line)")
 	}
 
 	webhookFile.Close()
 
 	cmd := exec.Command(webhookPath)
 	cmd.Env = append(os.Environ(), args...)
-	cmd.Stdin = input
 	cmd.Dir = filepath.Join(prefix, path)
+
+	if flags.stdin {
+		cmd.Stdin = input
+	}
 
 	out, err := cmd.CombinedOutput()
 	if err != nil {

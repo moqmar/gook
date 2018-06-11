@@ -1,15 +1,15 @@
-# gook - simple, file-based webhook server
+# Gook - simple, file-based webhook server
 
 A very simple webhook service for linux servers, written in Go.  
-If you create an executable script at `/var/www/.webhook`, you can run it by requesting http://localhost:8080/var/www/[key].  
-The key must be specified in the second line of the file with `#@GOOK:[key]`.
+If you create an executable script at `/var/www/.webhook` (we'll call this a "gookfile" or a "webhook script"), you can run it by requesting http://localhost:8080/var/www/[key].  
+The key must be specified in the second line of the file with `#@gook:[key]`, and can contain any number of flags, separated by a `+` - e.g. `#@gook+flag1+flag2:[key]`.
 
 You can **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
 
 Example `.webhook` file:
 ```
 #!/bin/sh
-#@GOOK:dontusethiskey
+#@gook+stdin:dontusethiskey
 
 git pull
 docker-compose up
@@ -24,7 +24,36 @@ docker-compose up
 - Working directory of a script is the folder containing the .webhook file
 - Port and host can be set using the `PORT` and `HOST` environment variables
 
-## Setup
+# Documentation
+
+## Preconditions for a gookfile
+- Must be named `.webhook`
+- Must be executable
+- Must start with a shebang (e.g. `#!/bin/sh`)
+- The second line ("gookline") must have the format `#@gook[+<flags>]:[key]`
+- The capitalization of "gook" and the flags doesn't matter, but the key is case-sensitive
+- Every flag must be valid
+
+## Flags
+ Flag  |  Meaning
+------ | ---------
+`stdin`| Pipe HTTP POST body to the script's STDIN.
+
+## HTTP Status Codes
+ Code  |  Meaning
+------ | ---------
+ `200` | Script exited with exit code `0`.
+ `424` | Script exited with a non-zero exit code. The exit code is available in the `Gook-Status` header.
+ `418` | Script exited with an error (e.g. if the process is killed). More information is available in the `Gook-Error` header.
+ `403` | The given key is invalid.
+ `404` | In the specified directory is no `.webhook` file, or the file is not available. More information is available in the Gook server logs.
+ `500` | The `.webhook` file is invalid or couldn't be read.
+
+---
+
+# Installation and Configuration
+
+## Installation with systemd
 ```
 wget https://get.mo-mar.de/gook -O /usr/local/bin/gook && chmod +x /usr/local/bin/gook
 wget https://raw.githubusercontent.com/moqmar/gook/master/gook.service -O /etc/systemd/system/gook.service
@@ -33,7 +62,7 @@ systemctl start gook
 systemctl status gook
 ```
 
-## Configuration
+## Configuration file
 
 The configuration files parsed are `/etc/gook.yaml`, `~/.config/gook.yaml` and `./gook.yaml`.
 
@@ -47,12 +76,3 @@ ignore: |
   .git/
   node_modules/
 ```
-
-# HTTP Status Codes
- Code  |  Meaning
------- | ---------
- `200` | Script exited with exit code `0`.
- `418` | Script exited with a non-zero exit code. More information is available in the `Gook-Error` header.
- `403` | The given key is invalid.
- `404` | In the specified directory is no `.webhook` file, or the file is not available.
- `500` | The `.webhook` file is invalid or couldn't be read.
