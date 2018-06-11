@@ -1,6 +1,6 @@
 # Gook - simple, file-based webhook server
 
-![](https://ci.mo-mar.de/api/badges/moqmar/gook/status.svg)
+[![](https://ci.mo-mar.de/api/badges/moqmar/gook/status.svg)](https://ci.mo-mar.de/moqmar/gook)
 
 A very simple webhook service for linux servers, written in Go.  
 If you create an executable script at `/var/www/.webhook` (we'll call this a "gookfile" or a "webhook script"), you can run it by requesting http://localhost:8080/var/www/[key].  
@@ -25,6 +25,8 @@ docker-compose up
 - Query parameters - appending `?hello=world` results in `$gook_hello` being set to `world`
 - Working directory of a script is the folder containing the .webhook file
 - Port and host can be set using the `PORT` and `HOST` environment variables
+
+---
 
 # Documentation
 
