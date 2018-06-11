@@ -81,6 +81,9 @@ systemctl start gook
 systemctl status gook
 ```
 
+The binary file provided on https://get.mo-mar.de/gook is compiled by the CI against the git master, for Linux x86 64-bit, and is statically linked.  
+If you want to use Gook on another system, you can build it yourself using Go: `go get github.com/moqmar/gook && cp "$(go env GOPATH)/bin/gook" /usr/local/bin/gook`
+
 ## Configuration file
 
 The configuration files parsed are `/etc/gook.yaml`, `~/.config/gook.yaml` and `./gook.yaml`.
