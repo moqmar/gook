@@ -26,7 +26,7 @@ docker-compose up
 
 ## Setup
 ```
-wget https://static.mo-mar.de/bin/gook -O /usr/local/bin/gook && chmod +x /usr/local/bin/gook
+wget https://get.mo-mar.de/gook -O /usr/local/bin/gook && chmod +x /usr/local/bin/gook
 wget https://raw.githubusercontent.com/moqmar/gook/master/gook.service -O /etc/systemd/system/gook.service
 systemctl enable gook
 systemctl start gook
