@@ -2,11 +2,11 @@
 
 [![](https://ci.mo-mar.de/api/badges/moqmar/gook/status.svg)](https://ci.mo-mar.de/moqmar/gook)
 
-A very simple webhook service for linux servers, written in Go.  
-If you create an executable script at `/var/www/.webhook` (we'll call this a "gookfile" or a "webhook script"), you can run it by requesting http://localhost:8080/var/www/[key].  
-The key must be specified in the second line of the file with `#@gook:[key]`, and can contain any number of flags, separated by a `+` - e.g. `#@gook+flag1+flag2:[key]`.
+**A simple but configurable and secure webhook service for linux servers, written in Go.**
 
-You can **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
+The short explanation: If you create an executable script at `/var/www/example/.webhook` (we'll call this a "gookfile" or a "webhook script") with the prefix set to `/var/www` in /etc/gook.yaml, you can run it by requesting http://localhost:8080/example/[key].
+
+The key must be specified in the second line of the script file with `#@gook:[key]`, and that line can also contain multiple flags that change the webhook behaviour, separated by a `+` - e.g. `#@gook+flag1+flag2:[key]`.
 
 Example `.webhook` file:
 ```
@@ -14,17 +14,27 @@ Example `.webhook` file:
 #@gook+stdin:dontusethiskey
 
 git pull
-docker-compose up
-```
 
-**WARNING:** It is highly recommended to use a reverse proxy like [Caddy](https://caddyserver.com/) to ensure the connection to Gook is working securely via HTTPS only!
+# Using STDIN to check if the POST body contains the word "recreate":
+if grep 'recreate'; then
+  docker-compose up --force-recreate
+else
+  docker-compose up
+fi
+```
 
 ## Features
 
-- POST requests - the body is piped to the STDIN of the script
 - Query parameters - appending `?hello=world` results in `$gook_hello` being set to `world`
+- POST requests - the body is piped to the STDIN of the script
 - Working directory of a script is the folder containing the .webhook file
 - Port and host can be set using the `PORT` and `HOST` environment variables
+
+## ⚠️ SECURITY CONSIDERATIONS ⚠
+- The software can be considered production-ready, but we don't make any guarantees that it will work or not break anything.
+- You can **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
+- It is recommended that the webhook script is only readable by the user the Gook server is running under.
+- Using a reverse proxy like [Caddy](https://caddyserver.com/) is recommended to ensure the connection to Gook is working securely via HTTPS only.
 
 ---
 
@@ -55,6 +65,8 @@ If `/<path>/<key>` is requested (key can be empty, although not recommended, but
  `403` | The given key is invalid.
  `404` | In the specified directory is no `.webhook` file, or the file is not available. More information is available in the Gook server logs.
  `500` | The `.webhook` file is invalid or couldn't be read.
+
+<!-- TODO: ## Environment Variables -->
 
 ---
 
