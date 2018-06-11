@@ -4,7 +4,7 @@
 
 **A simple but configurable and secure webhook service for linux servers, written in Go.**
 
-The short explanation: If you create an executable script at `/var/www/example/.webhook` (we'll call this a "gookfile" or a "webhook script") with the prefix set to `/var/www` in /etc/gook.yaml, you can run it by requesting http://localhost:8080/example/[key].
+The short explanation: If you create an executable script at `/var/www/example/.webhook` (we'll call this a "gookfile" or a "webhook script") with the prefix set to `/var/www` in `/etc/gook.yaml`, you can run it by requesting http://localhost:8080/example/[key].
 
 The key must be specified in the second line of the script file with `#@gook:[key]`, and that line can also contain multiple flags that change the webhook behaviour, separated by a `+` - e.g. `#@gook+flag1+flag2:[key]`.
 
@@ -32,7 +32,7 @@ fi
 
 ## ⚠️ SECURITY CONSIDERATIONS ⚠️
 - The software can be considered production-ready, but we don't make any guarantees that it will work or not break anything.
-- You can **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
+- You can (and should) **generate a secure key** using `echo $(tr -dc A-Za-z0-9 < /dev/urandom | head -c 64)`.
 - It is recommended that the webhook script is only readable by the user the Gook server is running under.
 - Using a reverse proxy like [Caddy](https://caddyserver.com/) is recommended to ensure the connection to Gook is working securely via HTTPS only.
 
