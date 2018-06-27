@@ -84,7 +84,7 @@ func handler(c *gin.Context) {
 		if err != nil && strings.HasPrefix(err.Error(), "exit status ") {
 			c.Header("Gook-Status", strings.TrimPrefix(err.Error(), "exit status "))
 			code = 424
-		} else {
+		} else if err != nil {
 			c.Header("Gook-Error", err.Error())
 		}
 		c.String(code, "%s\n", output)
