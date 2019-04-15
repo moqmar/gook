@@ -38,6 +38,10 @@ func main() {
 	gi = gitignore.NewGitIgnoreFromReader("/", strings.NewReader(viper.GetString("ignore")))
 	prefix = viper.GetString("prefix")
 
+	if os.Getenv("GIN_MODE") == "" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	r := gin.Default()
 	r.Use(handler)
 
