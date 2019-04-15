@@ -1,3 +1,0 @@
-package: github.com/moqmar/gook
-import:
-- package: github.com/moqmar/go-gitignore
