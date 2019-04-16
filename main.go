@@ -24,6 +24,7 @@ func main() {
 
 	viper.SetDefault("prefix", "/")
 	viper.SetDefault("ignore", "/proc/\n/sys/\n/dev/\n.git/\nnode_modules/")
+	viper.SetDefault("whitelist", []string{})
 
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -37,6 +38,7 @@ func main() {
 
 	gi = gitignore.NewGitIgnoreFromReader("/", strings.NewReader(viper.GetString("ignore")))
 	prefix = viper.GetString("prefix")
+	whitelist = viper.GetStringSlice("whitelist")
 
 	if os.Getenv("GIN_MODE") == "" {
 		gin.SetMode(gin.ReleaseMode)
@@ -61,6 +63,7 @@ func main() {
 var gi gitignore.IgnoreMatcher
 var prefix string
 var gookline = regexp.MustCompile(`^#@[gG][oO][oO][kK]((?:\+[^\+:]+)*):(.*)$`)
+var whitelist []string
 
 func handler(c *gin.Context) {
 	c.Header("Content-Type", "text/plain; charset=utf-8")
@@ -101,6 +104,19 @@ type flagsType struct {
 }
 
 func executor(path string, key string, args []string, input io.Reader) (string, int, error) {
+	if len(whitelist) > 0 {
+		whitelisted := false
+		for _, dir := range whitelist {
+			if strings.Trim(path, "/") == strings.Trim(dir, "/") {
+				whitelisted = true
+				break
+			}
+		}
+		if !whitelisted {
+			return "", 404, errors.New("this path is not whitelisted")
+		}
+	}
+
 	if gi.Match("/"+path, true) {
 		return "", 404, errors.New("this path is ignored")
 	}

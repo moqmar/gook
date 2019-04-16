@@ -92,8 +92,13 @@ The configuration files parsed are `/etc/gook.yaml`, `~/.config/gook.yaml` and `
 # Only files under the prefix can be requested.
 # http://localhost:8080/something/[key] would look for /var/www/something/.webhook in this case.
 prefix: /var/www
+# Only those exact directories are allowed - the recommended alternative to `ignore`.
+# WARNING: if the whitelist is empty, every .webhook file is allowed which can cause security issues!
+whitelist:
+- something # /var/www/something/.webhook
 # .gitignore-like definition of folders to ignore. The default contains the following folders:
 # /proc, /sys, /dev, .git/, node_modules/
+# DEPRECATED for security issues!
 ignore: |
   .git/
   node_modules/
