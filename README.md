@@ -74,7 +74,7 @@ If `/<path>/<key>` is requested (key can be empty, although not recommended, but
 
 ## Installation with systemd
 ```
-wget https://get.mo-mar.de/gook -O /usr/local/bin/gook && chmod +x /usr/local/bin/gook
+wget https://github.com/moqmar/gook/releases/download/latest/gook -O /usr/local/bin/gook && chmod +x /usr/local/bin/gook
 wget https://raw.githubusercontent.com/moqmar/gook/master/gook.service -O /etc/systemd/system/gook.service
 systemctl enable gook
 systemctl start gook
